@@ -1,28 +1,36 @@
+# main.py
 import streamlit as st
-from audio_processing import process_audio
-from car_customization import get_customization_suggestions, generate_car_image
+import os
+from audio_processing import transcribe_audio
+from car_customization import get_customization_suggestions
+from dotenv import load_dotenv
 
-# Streamlit App
+# Load environment variables
+load_dotenv()
+
 def app():
     st.title("AI-Powered Car Customization Advisor")
     
-    # Upload an audio file (e.g., 'test_audio.mp3')
-    audio_file = st.file_uploader("Upload your audio file", type=["mp3", "wav"])
+    # File upload section
+    audio_file = st.file_uploader("Upload Audio", type=["mp3", "wav", "m4a"])
     
     if audio_file is not None:
-        st.audio(audio_file, format='audio/mp3')
+        # Save the uploaded audio file
+        with open("uploaded_audio.wav", "wb") as f:
+            f.write(audio_file.getbuffer())
         
-        # Process audio file and get transcription
-        transcription = process_audio(audio_file)
-        st.write(f"You said: {transcription}")
+        # Transcribe the audio
+        transcription = transcribe_audio("uploaded_audio.wav")
+        st.write("Transcription: ", transcription)
         
-        # Get AI customization suggestions
+        # Get car customization suggestions
         suggestions = get_customization_suggestions(transcription)
-        st.write(f"AI Suggestions: {suggestions}")
+        st.write("Customization Suggestions: ", suggestions)
         
-        # Generate and display car image preview
-        car_image_url = generate_car_image(suggestions)
-        st.image(car_image_url, caption="Your Customized Car")
+        # Optionally, generate car image (if you have this functionality)
+        # car_image = generate_car_image(suggestions)
+        # st.image(car_image)
 
+# Run the Streamlit app
 if __name__ == "__main__":
     app()
