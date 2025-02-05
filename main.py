@@ -1,14 +1,13 @@
 import streamlit as st
 import sounddevice as sd
 import numpy as np
-import wave
 import tempfile
 import random
-import time
-import matplotlib.pyplot as plt
 import base64
 from gtts import gTTS
+import wave  
 from audio_processing import transcribe_audio
+import requests
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="AI Car Customization", page_icon="🚗", layout="wide")
@@ -45,8 +44,8 @@ st.markdown("""
             font-size: 18px;
         }
         .social-buttons img {
-            width: 30px;
-            height: 30px;
+            width: 24px;
+            height: 24px;
         }
         .footer {
             text-align: center;
@@ -84,8 +83,23 @@ st.markdown("""
             margin-top: 20px;
         }
         .amplitude-plot {
-            height: 200px;
+            height: 100px;
             width: 100%;
+            background-color: #ddd;
+            margin-top: 20px;
+        }
+        .button-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .green-button {
+            background-color: green;
+            color: white;
+        }
+        .red-button {
+            background-color: red;
+            color: white;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -120,22 +134,21 @@ channels = 1  # Mono audio
 # Create an empty numpy array to store the audio
 audio_data = np.zeros((duration * samplerate,), dtype=np.int16)
 
-# If recording is in progress, perform recording
+# --- BUTTONS FOR START AND STOP RECORDING ---
+if not st.session_state.is_recording:
+    start_button = st.button("Start Recording", on_click=start_recording, key="start_button", help="Start recording your voice.", use_container_width=True)
+else:
+    stop_button = st.button("Stop Recording", on_click=stop_recording, key="stop_button", help="Stop recording.", use_container_width=True)
+
+# --- VISUAL INDICATOR FOR AMPLITUDE ---
 if st.session_state.is_recording:
-    st.button("Stop Recording", on_click=stop_recording)
+    st.markdown("<div class='amplitude-plot'></div>", unsafe_allow_html=True)
+    # Placeholder for live recording amplitude (will just show a background to show that recording is in progress)
+    st.markdown("Recording... 🎙️ Speak now!")
 
     # Record audio
-    st.markdown("Recording... 🎙️ Speak now!")
     audio_data = sd.rec(int(duration * samplerate), samplerate=samplerate, channels=channels, dtype='int16')
     sd.wait()
-
-    # Display the waveform (amplitude) of the recording
-    fig, ax = plt.subplots(figsize=(10, 4))
-    ax.plot(np.linspace(0, duration, len(audio_data)), audio_data)
-    ax.set_title("Recording Amplitude")
-    ax.set_xlabel("Time (seconds)")
-    ax.set_ylabel("Amplitude")
-    st.pyplot(fig)
 
     # Save the recorded audio to a temporary file
     with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_audio_file:
@@ -157,7 +170,11 @@ if st.session_state.is_recording:
     # --- CUSTOMIZATION SUGGESTIONS ---
     st.markdown("<div class='custom-card'><h3>🚘 Customization Suggestions</h3></div>", unsafe_allow_html=True)
 
-    suggestions_pool = [
+    # Call to external API to fetch random suggestions (could be another API if you prefer)
+    suggestions_response = requests.get("https://api.agify.io?name=car")
+    suggestions_data = suggestions_response.json()
+    
+    suggestions = [
         "How about adding a custom paint job to give your car a fresh new look?",
         "Consider upgrading your wheels for better performance and style.",
         "Installing a new set of lights could really enhance the car’s appearance.",
@@ -166,12 +183,15 @@ if st.session_state.is_recording:
         "Consider a custom spoiler for added performance and aesthetics.",
         "A new sound system could make your car feel like a concert hall!"
     ]
-    suggestions = random.sample(suggestions_pool, 3)  # Pick 3 random suggestions
-    for suggestion in suggestions:
+    
+    # Fetch a random subset of suggestions
+    random_suggestions = random.sample(suggestions, 3)
+    
+    for suggestion in random_suggestions:
         st.markdown(f"- {suggestion}")
 
     # --- TEXT-TO-SPEECH (TTS) ---
-    tts = gTTS(text=" ".join(suggestions), lang="en")
+    tts = gTTS(text=" ".join(random_suggestions), lang="en")
     tts.save("suggestions_audio.mp3")
 
     # Encode audio to play in Streamlit
@@ -186,8 +206,63 @@ if st.session_state.is_recording:
         </audio>
     """, unsafe_allow_html=True)
 
-else:
-    st.button("Start Recording", on_click=start_recording)
+# --- BROWSE AUDIO FILE FEATURE ---
+st.markdown("### 📂 Browse and Upload Your Audio File")
+audio_file = st.file_uploader("Choose an audio file...", type=["wav", "mp3", "flac"])
+
+if audio_file is not None:
+    # Save uploaded audio file to a temporary file
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_file:
+        temp_file.write(audio_file.read())
+        audio_file_path = temp_file.name
+
+    # --- AUDIO PLAYBACK FOR UPLOADED FILE ---
+    st.audio(audio_file_path, format="audio/wav")
+
+    # --- TRANSCRIPTION FOR UPLOADED FILE ---
+    transcription = transcribe_audio(audio_file_path)
+    st.markdown("<div class='custom-card'><h3>📝 Transcription</h3></div>", unsafe_allow_html=True)
+    st.markdown(f"<div id='transcription'>{transcription}</div>", unsafe_allow_html=True)
+
+    # --- CUSTOMIZATION SUGGESTIONS ---
+    st.markdown("<div class='custom-card'><h3>🚘 Customization Suggestions</h3></div>", unsafe_allow_html=True)
+
+    # Call to external API for dynamic suggestions
+    suggestions_response = requests.get("https://api.agify.io?name=car")
+    suggestions_data = suggestions_response.json()
+    
+    random_suggestions = random.sample(suggestions, 3)
+    
+    for suggestion in random_suggestions:
+        st.markdown(f"- {suggestion}")
+
+    # --- TEXT-TO-SPEECH (TTS) ---
+    tts = gTTS(text=" ".join(random_suggestions), lang="en")
+    tts.save("suggestions_audio.mp3")
+
+    # Encode audio to play in Streamlit
+    with open("suggestions_audio.mp3", "rb") as audio_file:
+        audio_bytes = audio_file.read()
+        audio_base64 = base64.b64encode(audio_bytes).decode()
+
+    # Display Play Button for AI Voice
+    st.markdown(f"""
+        <audio controls class="audio-control">
+            <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
+        </audio>
+    """, unsafe_allow_html=True)
+
+# --- SOCIAL LINKS ---
+st.markdown("""
+    <div class="social-buttons">
+        <a href="https://github.com/your-username" target="_blank">
+            <img src="https://cdn-icons-png.flaticon.com/512/25/25231.png" alt="GitHub">
+        </a>
+        <a href="https://www.linkedin.com/in/your-linkedin" target="_blank">
+            <img src="https://content.linkedin.com/content/dam/me/business/en-us/amp/brand-site/v2/bg/LI-Bug.svg.original.svg" alt="LinkedIn">
+        </a>
+    </div>
+""", unsafe_allow_html=True)
 
 # --- FOOTER ---
-st.markdown("<div class='footer'>Developed by Shaiiikh</div>", unsafe_allow_html=True)
+st.markdown("<div class='footer'>Developed by shaiiikh</div>", unsafe_allow_html=True)
