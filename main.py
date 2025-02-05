@@ -3,7 +3,6 @@ import numpy as np
 import tempfile
 import random
 import base64
-from gtts import gTTS
 import wave
 from audio_processing import transcribe_audio
 import requests
