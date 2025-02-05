@@ -117,14 +117,39 @@ st.markdown("""
 
 # --- CAR CUSTOMIZATION SUGGESTIONS ---
 suggestions = [
-    "How about adding a custom paint job to give your car a fresh new look?",
-    "Consider upgrading your wheels for better performance and style.",
-    "Installing a new set of lights could really enhance the car’s appearance.",
-    "You might want to check out custom seat covers that suit your style.",
-    "How about adding a sunroof for a more luxurious feel?",
-    "Consider a custom spoiler for added performance and aesthetics.",
-    "A new sound system could make your car feel like a concert hall!"
+    "Upgrade to LED or neon underglow lighting for a futuristic look.",
+    "Try a matte or metallic wrap to give your car a unique aesthetic.",
+    "Consider installing carbon fiber accents for a sportier appeal.",
+    "How about adding custom racing stripes for a bold statement?",
+    "Upgrade your exhaust system for a more powerful sound and performance.",
+    "Tint your windows for privacy and a sleek, modern touch.",
+    "Personalize your license plate with a custom frame or LED lights.",
+    "Swap out your stock grille for a custom-designed one that stands out.",
+    "Install a roof rack for added storage and a rugged look.",
+    "Upgrade your car’s interior lighting with ambient LED strips.",
+    "Enhance your dashboard with a digital display or heads-up display (HUD).",
+    "Get a custom steering wheel cover to match your personality.",
+    "Install heated or ventilated seats for ultimate driving comfort.",
+    "Try a body kit to give your car an aggressive, performance-oriented look.",
+    "Upgrade your brake calipers with a custom color for a sportier feel.",
+    "Install retractable side steps for easier entry and exit.",
+    "Opt for smart keyless entry for convenience and security.",
+    "Add a high-performance air intake system for better fuel efficiency.",
+    "Customize your rims with a unique design or color finish.",
+    "Install a rear diffuser for improved aerodynamics and style.",
+    "Consider adding scissor or gull-wing doors for an exotic look.",
+    "Upgrade to a high-tech infotainment system with a touchscreen interface.",
+    "Add a personalized dashboard plaque with your name or favorite quote.",
+    "Install a front and rear dashcam for security and peace of mind.",
+    "Upgrade to smart side mirrors with blind-spot monitoring.",
+    "Consider adding a built-in refrigerator for long road trips.",
+    "Install a rear entertainment system for passengers on long drives.",
+    "Customize your horn sound to something fun or unique.",
+    "Try a custom tow hook for a race-inspired look.",
+    "Upgrade your wiper blades with high-performance, all-weather models.",
+    "Consider installing a custom engine start button for a racecar feel."
 ]
+
 
 # --- RECORD AUDIO FEATURE ---
 st.markdown("### 🎙️ Record Your Own Voice")
