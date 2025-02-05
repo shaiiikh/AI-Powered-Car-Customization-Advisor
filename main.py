@@ -9,6 +9,8 @@ import wave
 from audio_processing import transcribe_audio
 import requests
 import os
+import pyaudio
+
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="AI Car Customization", page_icon="🚗", layout="wide")
