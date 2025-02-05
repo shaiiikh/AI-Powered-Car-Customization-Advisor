@@ -141,7 +141,7 @@ def stop_recording():
 
 # Initialize audio parameters
 samplerate = 16000  # Sample rate in Hz
-duration = 5  # Duration of the recording in seconds
+duration = 10  # Duration of the recording in seconds
 channels = 1  # Mono audio
 
 # Create an empty numpy array to store the audio
@@ -270,10 +270,10 @@ if audio_file is not None:
 # --- SOCIAL LINKS ---
 st.markdown("""
     <div class="social-buttons">
-        <a href="https://github.com/your-username" target="_blank">
+        <a href="https://github.com/shaiiikh" target="_blank">
             <img id="github-logo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/GitHub_Invertocat_Logo.svg/1200px-GitHub_Invertocat_Logo.svg.png" alt="GitHub">
         </a>
-        <a href="https://www.linkedin.com/in/your-linkedin" target="_blank">
+        <a href="https://www.linkedin.com/in/ali-shaiiikh" target="_blank">
             <img src="https://content.linkedin.com/content/dam/me/business/en-us/amp/brand-site/v2/bg/LI-Bug.svg.original.svg" alt="LinkedIn">
         </a>
     </div>
