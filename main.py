@@ -10,7 +10,7 @@ from audio_processing import transcribe_audio
 import requests
 import os
 import pyaudio
-
+import time
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="AI Car Customization", page_icon="🚗", layout="wide")
@@ -126,7 +126,7 @@ suggestions = [
     "Personalize your license plate with a custom frame or LED lights.",
     "Swap out your stock grille for a custom-designed one that stands out.",
     "Install a roof rack for added storage and a rugged look.",
-    "Upgrade your car’s interior lighting with ambient LED strips.",
+    "Upgrade your car's interior lighting with ambient LED strips.",
     "Enhance your dashboard with a digital display or heads-up display (HUD).",
     "Get a custom steering wheel cover to match your personality.",
     "Install heated or ventilated seats for ultimate driving comfort.",
@@ -136,84 +136,100 @@ suggestions = [
     "Opt for smart keyless entry for convenience and security.",
     "Add a high-performance air intake system for better fuel efficiency.",
     "Customize your rims with a unique design or color finish.",
-    "Install a rear diffuser for improved aerodynamics and style.",
-    "Consider adding scissor or gull-wing doors for an exotic look.",
-    "Upgrade to a high-tech infotainment system with a touchscreen interface.",
-    "Add a personalized dashboard plaque with your name or favorite quote.",
-    "Install a front and rear dashcam for security and peace of mind.",
-    "Upgrade to smart side mirrors with blind-spot monitoring.",
-    "Consider adding a built-in refrigerator for long road trips.",
-    "Install a rear entertainment system for passengers on long drives.",
-    "Customize your horn sound to something fun or unique.",
-    "Try a custom tow hook for a race-inspired look.",
-    "Upgrade your wiper blades with high-performance, all-weather models.",
-    "Consider installing a custom engine start button for a racecar feel."
+    "Install a rear diffuser for improved aerodynamics and style."
 ]
-
 
 # --- RECORD AUDIO FEATURE ---
 st.markdown("### 🎙️ Record Your Own Voice")
 
-# Initialize state to track recording status
+# Initialize state variables
 if "is_recording" not in st.session_state:
     st.session_state.is_recording = False
-
-# Button to start recording
-def start_recording():
-    st.session_state.is_recording = True
-
-# Button to stop recording
-def stop_recording():
-    st.session_state.is_recording = False
+if "recording_complete" not in st.session_state:
+    st.session_state.recording_complete = False
+if "start_time" not in st.session_state:
+    st.session_state.start_time = None
+if "wavfile" not in st.session_state:
+    st.session_state.wavfile = None
 
 # Initialize audio parameters
 samplerate = 16000  # Sample rate in Hz
 duration = 10  # Duration of the recording in seconds
 channels = 1  # Mono audio
 
-# Create an empty numpy array to store the audio
-audio_data = np.zeros((duration * samplerate,), dtype=np.int16)
+def start_recording():
+    st.session_state.is_recording = True
+    st.session_state.start_time = time.time()
+    st.session_state.recording_complete = False
+    st.rerun()
 
-# Initialize wavfile variable
-wavfile = None
+def reset_recording():
+    st.session_state.is_recording = False
+    st.session_state.recording_complete = False
+    st.session_state.start_time = None
+    st.session_state.wavfile = None
+    st.rerun()
 
-# --- BUTTONS FOR START AND STOP RECORDING ---
-if not st.session_state.is_recording:
-    start_button = st.button("Start Recording", on_click=start_recording, key="start_button", help="Start recording your voice.", use_container_width=True)
-else:
-    stop_button = st.button("Stop Recording", on_click=stop_recording, key="stop_button", help="Stop recording.", use_container_width=True)
+# --- BUTTON FOR START RECORDING ---
+if not st.session_state.is_recording and not st.session_state.recording_complete:
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        start_button = st.button("Start Recording (10 secs)", 
+                                key="start_button", 
+                                help="Start recording your voice for 10 seconds.", 
+                                on_click=start_recording,
+                                use_container_width=True)
+    with col2:
+        if st.button("Reset", on_click=reset_recording):
+            st.rerun()
 
-# --- VISUAL INDICATOR FOR AMPLITUDE ---
+# --- RECORDING PROCESS AND STATUS ---
 if st.session_state.is_recording:
+    # Show recording status
     st.markdown("<div class='amplitude-plot'></div>", unsafe_allow_html=True)
-    # Placeholder for live recording amplitude (will just show a background to show that recording is in progress)
-    st.markdown("Recording... 🎙️ Speak now!")
-
+    status_placeholder = st.empty()
+    
     # Record audio
     audio_data = sd.rec(int(duration * samplerate), samplerate=samplerate, channels=channels, dtype='int16')
+    
+    # Show countdown
+    for remaining in range(duration, 0, -1):
+        status_placeholder.markdown(f"Recording... 🎙️ {remaining} seconds remaining")
+        time.sleep(1)
+    
     sd.wait()
-
-    # Save the recorded audio to a temporary file
+    
+    # After recording is complete
+    st.session_state.is_recording = False
+    st.session_state.recording_complete = True
+    
+    # Save the recorded audio
     with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_audio_file:
-        wavfile = temp_audio_file.name
-        with wave.open(wavfile, 'wb') as wf:
+        st.session_state.wavfile = temp_audio_file.name
+        with wave.open(st.session_state.wavfile, 'wb') as wf:
             wf.setnchannels(channels)
-            wf.setsampwidth(2)  # 2 bytes per sample (16-bit)
+            wf.setsampwidth(2)
             wf.setframerate(samplerate)
             wf.writeframes(audio_data.tobytes())
+    
+    st.rerun()
 
+# --- DISPLAY RECORDING COMPLETE AND RESULTS ---
+if st.session_state.recording_complete and st.session_state.wavfile:
+    st.success("Recording Complete! 🎉")
+    
     # --- AUDIO PLAYBACK FOR RECORDED FILE ---
-    st.audio(wavfile, format="audio/wav")
-
+    st.audio(st.session_state.wavfile, format="audio/wav")
+    
     # --- TRANSCRIPTION ---
-    transcription = transcribe_audio(wavfile)
+    transcription = transcribe_audio(st.session_state.wavfile)
     st.markdown("<div class='custom-card'><h3>📝 Transcription</h3></div>", unsafe_allow_html=True)
     st.markdown(f"<div id='transcription'>{transcription}</div>", unsafe_allow_html=True)
 
     # --- CUSTOMIZATION SUGGESTIONS ---
     st.markdown("<div class='custom-card'><h3>🚘 Customization Suggestions</h3></div>", unsafe_allow_html=True)
     
-    # Fetch a random subset of suggestions
+    # Fetch random suggestions
     random_suggestions = random.sample(suggestions, 3)
     
     for suggestion in random_suggestions:
@@ -238,11 +254,9 @@ if st.session_state.is_recording:
     # --- SAVE SUGGESTION AUDIO FILE ---
     save_button = st.button("Save Suggestions Audio", key="save_button")
     if save_button:
-        # Save the audio to a file
         suggestions_audio_path = "suggestions_audio_output.wav"
         tts.save(suggestions_audio_path)
         
-        # Provide download link
         with open(suggestions_audio_path, "rb") as file:
             st.download_button(
                 label="Download Suggestions Audio",
@@ -256,7 +270,7 @@ st.markdown("### 📂 Browse and Upload Your Audio File")
 audio_file = st.file_uploader("Choose an audio file...", type=["wav", "mp3", "flac"])
 
 if audio_file is not None:
-    # Save uploaded audio file to a temporary file
+    # Save uploaded audio file
     with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_file:
         temp_file.write(audio_file.read())
         audio_file_path = temp_file.name
@@ -271,10 +285,8 @@ if audio_file is not None:
 
     # --- CUSTOMIZATION SUGGESTIONS ---
     st.markdown("<div class='custom-card'><h3>🚘 Customization Suggestions</h3></div>", unsafe_allow_html=True)
-
-    # Fetch random suggestions
-    random_suggestions = random.sample(suggestions, 3)
     
+    random_suggestions = random.sample(suggestions, 3)
     for suggestion in random_suggestions:
         st.markdown(f"- {suggestion}")
 
@@ -282,12 +294,10 @@ if audio_file is not None:
     tts = gTTS(text=" ".join(random_suggestions), lang="en")
     tts.save("suggestions_audio.mp3")
 
-    # Encode audio to play in Streamlit
     with open("suggestions_audio.mp3", "rb") as audio_file:
         audio_bytes = audio_file.read()
         audio_base64 = base64.b64encode(audio_bytes).decode()
 
-    # Display Play Button for AI Voice
     st.markdown(f"""
         <audio controls class="audio-control">
             <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
