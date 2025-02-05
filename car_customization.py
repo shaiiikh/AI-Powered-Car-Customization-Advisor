@@ -1,26 +1,25 @@
 # car_customization.py
-import openai
-import os
-from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
-
-# Function to get customization suggestions based on transcription
+# Function to get car customization suggestions based on transcription
 def get_customization_suggestions(transcription):
-    # Set up the OpenAI API key (if needed, update this with the correct logic)
-    openai.api_key = os.getenv("OPENAI_API_KEY")
-    
-    # Call OpenAI API to generate customization suggestions (modify as needed)
-    response = openai.Completion.create(
-        engine="text-davinci-003",  # Or any model of your choice
-        prompt=f"Given the transcription: '{transcription}', provide car customization suggestions.",
-        max_tokens=150
-    )
-    
-    return response.choices[0].text.strip()
+    # Predefined templates or logic to generate suggestions
+    suggestions = []
 
-# Function to generate car image (optional)
-def generate_car_image(description):
-    # Use DALL-E or other image generation logic here (if needed)
-    pass
+    # Example logic: If the transcription mentions specific car parts, generate suggestions accordingly
+    if "paint" in transcription:
+        suggestions.append("Consider a custom paint job to make your car stand out!")
+    if "interior" in transcription:
+        suggestions.append("Upgrade your car's interior with luxury leather seats and a high-end sound system.")
+    if "wheels" in transcription:
+        suggestions.append("You might want to install custom alloy wheels for a sleek look.")
+    if "roof" in transcription:
+        suggestions.append("A panoramic sunroof could enhance the driving experience.")
+    if "engine" in transcription:
+        suggestions.append("Consider tuning your engine for improved performance.")
+
+    # If no specific customization is found, suggest a general option
+    if not suggestions:
+        suggestions.append("Let’s start with a custom paint job or interior upgrade!")
+
+    # Join the suggestions into a formatted string to display
+    return "\n".join(suggestions)

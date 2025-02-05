@@ -1,4 +1,3 @@
-# main.py
 import streamlit as st
 import os
 from audio_processing import transcribe_audio
@@ -11,8 +10,21 @@ load_dotenv()
 def app():
     st.title("AI-Powered Car Customization Advisor")
     
+    # Add a short description
+    st.markdown("""
+    Welcome to the AI-Powered Car Customization Advisor! 🚗✨  
+    Upload an audio file describing your car customization preferences, and our AI will generate suggestions for you.  
+    Let's get started!
+    """)
+
+    # Display GitHub handle for reference
+    st.markdown("""
+    Developed by: [Muhammad Ali Shaikh](https://github.com/shaiiikh)
+    """)
+
     # File upload section
-    audio_file = st.file_uploader("Upload Audio", type=["mp3", "wav", "m4a"])
+    st.subheader("Upload Your Audio File")
+    audio_file = st.file_uploader("Choose an Audio file (mp3, wav, m4a)", type=["mp3", "wav", "m4a"])
     
     if audio_file is not None:
         # Save the uploaded audio file
@@ -21,15 +33,47 @@ def app():
         
         # Transcribe the audio
         transcription = transcribe_audio("uploaded_audio.wav")
-        st.write("Transcription: ", transcription)
         
-        # Get car customization suggestions
+        # Display transcription
+        st.subheader("Transcription:")
+        st.write(transcription)
+
+        # Provide suggestions
+        st.subheader("AI Customization Suggestions")
         suggestions = get_customization_suggestions(transcription)
-        st.write("Customization Suggestions: ", suggestions)
+        st.write(suggestions)
         
-        # Optionally, generate car image (if you have this functionality)
-        # car_image = generate_car_image(suggestions)
-        # st.image(car_image)
+        # Option to save suggestions
+        if st.button("Save Customization"):
+            save_user_customization({
+                "transcription": transcription,
+                "suggestions": suggestions
+            })
+            st.success("Customization saved successfully!")
+
+    # Error handling for empty file upload
+    else:
+        st.warning("Please upload an audio file to get started.")
+
+def save_user_customization(customization_data):
+    """
+    This function will save the user's customization data (e.g., transcription and suggestions) locally.
+    You can also extend this to save the data to a database if needed.
+    """
+    if not os.path.exists('user_data.json'):
+        with open('user_data.json', 'w') as f:
+            json.dump([], f)
+
+    # Load existing data
+    with open('user_data.json', 'r') as f:
+        data = json.load(f)
+
+    # Append new customization data
+    data.append(customization_data)
+
+    # Save back to the file
+    with open('user_data.json', 'w') as f:
+        json.dump(data, f, indent=4)
 
 # Run the Streamlit app
 if __name__ == "__main__":

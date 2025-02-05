@@ -1,4 +1,0 @@
-whisper
-streamlit
-python-dotenv
-openai
