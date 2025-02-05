@@ -1,13 +1,13 @@
 import streamlit as st
-import sounddevice as sd
 import numpy as np
 import tempfile
 import random
 import base64
 from gtts import gTTS
-import wave  
+import wave
 from audio_processing import transcribe_audio
 import requests
+import os
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="AI Car Customization", page_icon="🚗", layout="wide")
@@ -81,6 +81,7 @@ st.markdown("""
         }
         .audio-control {
             margin-top: 20px;
+            width: 100%;
         }
         .amplitude-plot {
             height: 100px;
@@ -111,6 +112,17 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
+# --- CAR CUSTOMIZATION SUGGESTIONS ---
+suggestions = [
+    "How about adding a custom paint job to give your car a fresh new look?",
+    "Consider upgrading your wheels for better performance and style.",
+    "Installing a new set of lights could really enhance the car’s appearance.",
+    "You might want to check out custom seat covers that suit your style.",
+    "How about adding a sunroof for a more luxurious feel?",
+    "Consider a custom spoiler for added performance and aesthetics.",
+    "A new sound system could make your car feel like a concert hall!"
+]
+
 # --- RECORD AUDIO FEATURE ---
 st.markdown("### 🎙️ Record Your Own Voice")
 
@@ -133,6 +145,9 @@ channels = 1  # Mono audio
 
 # Create an empty numpy array to store the audio
 audio_data = np.zeros((duration * samplerate,), dtype=np.int16)
+
+# Initialize wavfile variable
+wavfile = None
 
 # --- BUTTONS FOR START AND STOP RECORDING ---
 if not st.session_state.is_recording:
@@ -169,20 +184,6 @@ if st.session_state.is_recording:
 
     # --- CUSTOMIZATION SUGGESTIONS ---
     st.markdown("<div class='custom-card'><h3>🚘 Customization Suggestions</h3></div>", unsafe_allow_html=True)
-
-    # Call to external API to fetch random suggestions (could be another API if you prefer)
-    suggestions_response = requests.get("https://api.agify.io?name=car")
-    suggestions_data = suggestions_response.json()
-    
-    suggestions = [
-        "How about adding a custom paint job to give your car a fresh new look?",
-        "Consider upgrading your wheels for better performance and style.",
-        "Installing a new set of lights could really enhance the car’s appearance.",
-        "You might want to check out custom seat covers that suit your style.",
-        "How about adding a sunroof for a more luxurious feel?",
-        "Consider a custom spoiler for added performance and aesthetics.",
-        "A new sound system could make your car feel like a concert hall!"
-    ]
     
     # Fetch a random subset of suggestions
     random_suggestions = random.sample(suggestions, 3)
@@ -206,6 +207,22 @@ if st.session_state.is_recording:
         </audio>
     """, unsafe_allow_html=True)
 
+    # --- SAVE SUGGESTION AUDIO FILE ---
+    save_button = st.button("Save Suggestions Audio", key="save_button")
+    if save_button:
+        # Save the audio to a file
+        suggestions_audio_path = "suggestions_audio_output.wav"
+        tts.save(suggestions_audio_path)
+        
+        # Provide download link
+        with open(suggestions_audio_path, "rb") as file:
+            st.download_button(
+                label="Download Suggestions Audio",
+                data=file,
+                file_name=suggestions_audio_path,
+                mime="audio/wav"
+            )
+
 # --- BROWSE AUDIO FILE FEATURE ---
 st.markdown("### 📂 Browse and Upload Your Audio File")
 audio_file = st.file_uploader("Choose an audio file...", type=["wav", "mp3", "flac"])
@@ -227,10 +244,7 @@ if audio_file is not None:
     # --- CUSTOMIZATION SUGGESTIONS ---
     st.markdown("<div class='custom-card'><h3>🚘 Customization Suggestions</h3></div>", unsafe_allow_html=True)
 
-    # Call to external API for dynamic suggestions
-    suggestions_response = requests.get("https://api.agify.io?name=car")
-    suggestions_data = suggestions_response.json()
-    
+    # Fetch random suggestions
     random_suggestions = random.sample(suggestions, 3)
     
     for suggestion in random_suggestions:
@@ -256,7 +270,7 @@ if audio_file is not None:
 st.markdown("""
     <div class="social-buttons">
         <a href="https://github.com/your-username" target="_blank">
-            <img src="https://cdn-icons-png.flaticon.com/512/25/25231.png" alt="GitHub">
+            <img id="github-logo" src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/GitHub_Invertocat_Logo.svg/1200px-GitHub_Invertocat_Logo.svg.png" alt="GitHub">
         </a>
         <a href="https://www.linkedin.com/in/your-linkedin" target="_blank">
             <img src="https://content.linkedin.com/content/dam/me/business/en-us/amp/brand-site/v2/bg/LI-Bug.svg.original.svg" alt="LinkedIn">
