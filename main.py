@@ -106,13 +106,6 @@ st.markdown("""
             background-color: red;
             color: white;
         }
-        .download-section {
-            margin-top: 20px;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            background-color: #f8f9fa;
-        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -147,14 +140,6 @@ suggestions = [
     "Install a rear diffuser for improved aerodynamics and style."
 ]
 
-# Function to create formatted suggestions text
-def format_suggestions(suggestions_list):
-    current_time = time.strftime("%Y-%m-%d %H:%M:%S")
-    formatted_text = f"Car Customization Suggestions\nGenerated on: {current_time}\n\n"
-    for i, suggestion in enumerate(suggestions_list, 1):
-        formatted_text += f"{i}. {suggestion}\n"
-    return formatted_text
-
 # --- RECORD AUDIO FEATURE ---
 st.markdown("### 🎙️ Record Your Own Voice")
 
@@ -183,18 +168,6 @@ if audio_bytes:
     
     for suggestion in random_suggestions:
         st.markdown(f"- {suggestion}")
-
-    # --- SAVE SUGGESTIONS BUTTON ---
-    st.markdown("<div class='download-section'>", unsafe_allow_html=True)
-    formatted_suggestions = format_suggestions(random_suggestions)
-    st.download_button(
-        label="💾 Save Suggestions",
-        data=formatted_suggestions,
-        file_name="car_customization_suggestions.txt",
-        mime="text/plain",
-        help="Download these suggestions as a text file"
-    )
-    st.markdown("</div>", unsafe_allow_html=True)
 
     # --- TEXT-TO-SPEECH (TTS) ---
     tts = gTTS(text=" ".join(random_suggestions), lang="en")
@@ -236,18 +209,6 @@ if audio_file is not None:
     random_suggestions = random.sample(suggestions, 3)
     for suggestion in random_suggestions:
         st.markdown(f"- {suggestion}")
-
-    # --- SAVE SUGGESTIONS BUTTON ---
-    st.markdown("<div class='download-section'>", unsafe_allow_html=True)
-    formatted_suggestions = format_suggestions(random_suggestions)
-    st.download_button(
-        label="💾 Save Suggestions",
-        data=formatted_suggestions,
-        file_name="car_customization_suggestions.txt",
-        mime="text/plain",
-        help="Download these suggestions as a text file"
-    )
-    st.markdown("</div>", unsafe_allow_html=True)
 
     # --- TEXT-TO-SPEECH (TTS) ---
     tts = gTTS(text=" ".join(random_suggestions), lang="en")
