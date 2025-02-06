@@ -222,11 +222,9 @@ if st.session_state.is_recording:
     
     if audio_bytes:
         st.session_state.audio_bytes = audio_bytes
-        st.session_state.is_recording = False
-        st.rerun()
 
-# Process recorded audio
-if st.session_state.audio_bytes is not None:
+# Process recorded audio when stop button is clicked
+if not st.session_state.is_recording and st.session_state.audio_bytes is not None:
     # Save the recorded audio
     with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_audio_file:
         temp_audio_file.write(st.session_state.audio_bytes)
@@ -263,12 +261,10 @@ if st.session_state.audio_bytes is not None:
     tts = gTTS(text=" ".join(random_suggestions), lang="en")
     tts.save("suggestions_audio.mp3")
 
-    # Encode audio to play in Streamlit
     with open("suggestions_audio.mp3", "rb") as audio_file:
         audio_bytes = audio_file.read()
         audio_base64 = base64.b64encode(audio_bytes).decode()
 
-    # Display Play Button for AI Voice
     st.markdown(f"""
         <audio controls class="audio-control">
             <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
