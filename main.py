@@ -11,7 +11,7 @@ import requests
 import os
 import pyaudio
 import time
-from audio_recorder_streamlit import audio_recorder  # Changed import
+from audio_recorder_streamlit import audio_recorder
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="AI Car Customization", page_icon="🚗", layout="wide")
@@ -70,14 +70,25 @@ st.markdown("""
             font-weight: bold;
         }
         .button {
+            width: 200px;
+            height: 50px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .start-button {
             background-color: #4CAF50;
             color: white;
-            font-size: 16px;
-            padding: 10px 20px;
-            border-radius: 5px;
+        }
+        .stop-button {
+            background-color: #ff4444;
+            color: white;
         }
         .button:hover {
-            background-color: #45a049;
+            opacity: 0.8;
         }
         #transcription {
             font-size: 18px;
@@ -93,18 +104,11 @@ st.markdown("""
             background-color: #ddd;
             margin-top: 20px;
         }
-        .button-row {
+        .recording-controls {
             display: flex;
-            justify-content: space-between;
-            gap: 10px;
-        }
-        .green-button {
-            background-color: green;
-            color: white;
-        }
-        .red-button {
-            background-color: red;
-            color: white;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
         }
         .download-section {
             margin-top: 20px;
@@ -112,6 +116,21 @@ st.markdown("""
             border: 1px solid #ddd;
             border-radius: 5px;
             background-color: #f8f9fa;
+        }
+        .status-indicator {
+            text-align: center;
+            font-size: 18px;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .recording {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        .stopped {
+            background-color: #e8f5e9;
+            color: #2e7d32;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -156,19 +175,65 @@ def format_suggestions(suggestions_list):
     return formatted_text
 
 # --- RECORD AUDIO FEATURE ---
-st.markdown("### 🎙️ Record Your Own Voice")
+st.markdown("### 🎙️ Record Your Voice for Customization Suggestions")
 
-# Initialize audio recorder
-audio_bytes = audio_recorder()
+# Initialize session state
+if 'is_recording' not in st.session_state:
+    st.session_state.is_recording = False
+if 'audio_bytes' not in st.session_state:
+    st.session_state.audio_bytes = None
 
-if audio_bytes:
+# Recording controls
+col1, col2, col3 = st.columns([1, 2, 1])
+
+with col2:
+    if not st.session_state.is_recording:
+        if st.button("🎙️ Start Recording", key="start", 
+                    help="Click to start recording",
+                    use_container_width=True,
+                    type="primary"):
+            st.session_state.is_recording = True
+            st.rerun()
+    else:
+        if st.button("⏹️ Stop Recording", key="stop",
+                    help="Click to stop recording",
+                    use_container_width=True,
+                    type="secondary"):
+            st.session_state.is_recording = False
+            st.rerun()
+
+# Show recording status
+if st.session_state.is_recording:
+    st.markdown("""
+        <div class="status-indicator recording">
+            🔴 Recording in progress...
+        </div>
+    """, unsafe_allow_html=True)
+
+# Audio recorder
+if st.session_state.is_recording:
+    audio_bytes = audio_recorder(
+        pause_threshold=9999999.0,  # Very high number to prevent auto-stop
+        recording_color="#ff4444",
+        neutral_color="#4CAF50",
+        icon_name="microphone",
+        icon_size="2x"
+    )
+    
+    if audio_bytes:
+        st.session_state.audio_bytes = audio_bytes
+        st.session_state.is_recording = False
+        st.rerun()
+
+# Process recorded audio
+if st.session_state.audio_bytes is not None:
     # Save the recorded audio
     with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_audio_file:
-        temp_audio_file.write(audio_bytes)
+        temp_audio_file.write(st.session_state.audio_bytes)
         audio_file_path = temp_audio_file.name
 
     # Display the recorded audio
-    st.audio(audio_bytes, format="audio/wav")
+    st.audio(st.session_state.audio_bytes, format="audio/wav")
 
     # --- TRANSCRIPTION ---
     transcription = transcribe_audio(audio_file_path)
@@ -178,9 +243,7 @@ if audio_bytes:
     # --- CUSTOMIZATION SUGGESTIONS ---
     st.markdown("<div class='custom-card'><h3>🚘 Customization Suggestions</h3></div>", unsafe_allow_html=True)
     
-    # Fetch random suggestions
     random_suggestions = random.sample(suggestions, 3)
-    
     for suggestion in random_suggestions:
         st.markdown(f"- {suggestion}")
 
@@ -211,6 +274,11 @@ if audio_bytes:
             <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
         </audio>
     """, unsafe_allow_html=True)
+
+    # Add Reset button
+    if st.button("🔄 Start New Recording", type="primary"):
+        st.session_state.audio_bytes = None
+        st.rerun()
 
 # --- BROWSE AUDIO FILE FEATURE ---
 st.markdown("### 📂 Browse and Upload Your Audio File")
