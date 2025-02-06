@@ -1,10 +1,7 @@
-whisper
 streamlit
 numpy
-sounddevice
 gtts
 requests
 pydub
 ffmpeg
 openai-whisper
-pyaudio
