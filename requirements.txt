@@ -8,3 +8,4 @@ torch
 requests
 pyaudio
 wave
+audio-recorder-streamlit
