@@ -1,15 +1,17 @@
 import streamlit as st
+import sounddevice as sd
+import numpy as np
+import tempfile
 import random
 import base64
 from gtts import gTTS
-import time
-import tempfile
 import wave
+from audio_processing import transcribe_audio
 import requests
 import os
-from audio_processing import transcribe_audio
-import streamlit_audio as st_audiorec  # Import streamlit_audio
-
+import pyaudio
+import time
+from audio_recorder_streamlit import audio_recorder  # Changed import
 
 # --- PAGE CONFIGURATION ---
 st.set_page_config(page_title="AI Car Customization", page_icon="🚗", layout="wide")
@@ -141,47 +143,42 @@ suggestions = [
 # --- RECORD AUDIO FEATURE ---
 st.markdown("### 🎙️ Record Your Own Voice")
 
-# Initialize session state
-if "audio_data" not in st.session_state:
-    st.session_state.audio_data = None
+# Initialize audio recorder
+audio_bytes = audio_recorder()
 
-# --- RECORDING BUTTON ---
-if not st.session_state.audio_data:
-    col1, col2 = st.columns([3, 1])
-    with col1:
-        start_button = st.button("Start Recording", key="start_button", help="Start recording your voice for 10 seconds.", on_click=start_recording, use_container_width=True)
-    with col2:
-        reset_button = st.button("Reset", on_click=reset_recording)
+if audio_bytes:
+    # Save the recorded audio
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_audio_file:
+        temp_audio_file.write(audio_bytes)
+        audio_file_path = temp_audio_file.name
 
-# --- USING streamlit_audio FOR LIVE RECORDING ---
-if not st.session_state.audio_data:
-    st.session_state.audio_data = st_audiorec.record(duration=10)  # This allows a 10-second audio recording
+    # Display the recorded audio
+    st.audio(audio_bytes, format="audio/wav")
 
-if st.session_state.audio_data:
-    st.success("Recording Complete! 🎉")
-    
-    # --- PLAYBACK FOR RECORDED AUDIO ---
-    st.audio(st.session_state.audio_data, format="audio/wav")
-    
     # --- TRANSCRIPTION ---
-    transcription = transcribe_audio(st.session_state.audio_data)
+    transcription = transcribe_audio(audio_file_path)
     st.markdown("<div class='custom-card'><h3>📝 Transcription</h3></div>", unsafe_allow_html=True)
     st.markdown(f"<div id='transcription'>{transcription}</div>", unsafe_allow_html=True)
 
     # --- CUSTOMIZATION SUGGESTIONS ---
     st.markdown("<div class='custom-card'><h3>🚘 Customization Suggestions</h3></div>", unsafe_allow_html=True)
+    
+    # Fetch random suggestions
     random_suggestions = random.sample(suggestions, 3)
+    
     for suggestion in random_suggestions:
         st.markdown(f"- {suggestion}")
-        
+
     # --- TEXT-TO-SPEECH (TTS) ---
     tts = gTTS(text=" ".join(random_suggestions), lang="en")
     tts.save("suggestions_audio.mp3")
 
+    # Encode audio to play in Streamlit
     with open("suggestions_audio.mp3", "rb") as audio_file:
         audio_bytes = audio_file.read()
         audio_base64 = base64.b64encode(audio_bytes).decode()
 
+    # Display Play Button for AI Voice
     st.markdown(f"""
         <audio controls class="audio-control">
             <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
