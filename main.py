@@ -10,7 +10,6 @@ from audio_processing import transcribe_audio
 from car_customization import get_customization_suggestions
 import requests
 import os
-import pyaudio
 import time
 from audio_recorder_streamlit import audio_recorder
 
