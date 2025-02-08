@@ -1,25 +1,26 @@
 # car_customization.py
 
-# Function to get car customization suggestions based on transcription
 def get_customization_suggestions(transcription):
-    # Predefined templates or logic to generate suggestions
     suggestions = []
 
-    # Example logic: If the transcription mentions specific car parts, generate suggestions accordingly
-    if "paint" in transcription:
-        suggestions.append("Consider a custom paint job to make your car stand out!")
-    if "interior" in transcription:
-        suggestions.append("Upgrade your car's interior with luxury leather seats and a high-end sound system.")
-    if "wheels" in transcription:
-        suggestions.append("You might want to install custom alloy wheels for a sleek look.")
-    if "roof" in transcription:
-        suggestions.append("A panoramic sunroof could enhance the driving experience.")
-    if "engine" in transcription:
-        suggestions.append("Consider tuning your engine for improved performance.")
+    # Define keywords and corresponding suggestions
+    keywords = {
+        "paint": "Consider a custom paint job to make your car stand out!",
+        "interior": "Upgrade your car's interior with luxury leather seats and a high-end sound system.",
+        "wheels": "You might want to install custom alloy wheels for a sleek look.",
+        "roof": "A panoramic sunroof could enhance the driving experience.",
+        "engine": "Consider tuning your engine for improved performance.",
+        "lights": "Upgrade to LED or neon underglow lighting for a futuristic look.",
+        "sound system": "Enhance your car with a premium sound system.",
+        "exhaust": "Upgrade your exhaust system for a more powerful sound and performance.",
+        "windows": "Tint your windows for privacy and a sleek, modern touch.",
+        "dashboard": "Enhance your dashboard with a digital display or heads-up display (HUD)."
+    }
 
-    # If no specific customization is found, suggest a general option
-    if not suggestions:
-        suggestions.append("Let’s start with a custom paint job or interior upgrade!")
+    # Check transcription for keywords
+    for word, suggestion in keywords.items():
+        if word in transcription.lower():
+            suggestions.append(suggestion)
 
-    # Join the suggestions into a formatted string to display
-    return "\n".join(suggestions)
+    # Return suggestions if found, else return a default message
+    return "\n".join(suggestions) if suggestions else "No specific customizations detected."

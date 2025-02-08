@@ -14,7 +14,7 @@ model = load_model()
 # Function to transcribe audio
 def transcribe_audio(audio_path):
     try:
-        # Convert the audio to WAV format if necessary
+        # Convert audio to WAV if necessary
         audio = AudioSegment.from_file(audio_path)
         temp_wav_path = "temp.wav"
         audio.export(temp_wav_path, format="wav")
