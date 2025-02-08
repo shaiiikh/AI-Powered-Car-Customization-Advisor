@@ -1,6 +1,5 @@
 streamlit
 numpy
-sounddevice
 gTTS
 pydub
 whisper
