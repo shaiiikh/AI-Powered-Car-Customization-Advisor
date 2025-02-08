@@ -117,7 +117,7 @@ st.markdown("""
 # --- RECORD AUDIO FEATURE ---
 st.markdown("### 🎧 Record Your Own Voice")
 
-audio_bytes = audio_recorder()
+audio_bytes = audio_recorder(pause_threshold=10.0, text="Click to Record")
 
 if audio_bytes:
     with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as temp_audio_file:
@@ -136,7 +136,7 @@ if audio_bytes:
     suggestions = get_customization_suggestions(transcription)
     if not suggestions or "No specific customizations detected." in suggestions:
         if any(word in transcription.lower() for word in ["car", "vehicle", "jeep", "automobile"]):
-            suggestions = "Consider upgrading your car's interior with luxury leather seats, or add custom alloy wheels for a sleek look."
+            suggestions = "Consider upgrading your car's interior with luxury leather seats, add custom alloy wheels, or install a premium sound system for an immersive experience."
         else:
             suggestions = "No relevant car customizations detected from your audio."
 
@@ -160,7 +160,7 @@ if audio_bytes:
         </audio>
     """, unsafe_allow_html=True)
 else:
-    st.error("Audio recording failed. Please try again.")
+    st.warning("Click the record button to start recording your voice.")
 
 # --- UPLOAD AUDIO FILE FEATURE ---
 st.markdown("### 📂 Browse and Upload Your Audio File")
@@ -179,7 +179,7 @@ if audio_file:
     suggestions = get_customization_suggestions(transcription)
     if not suggestions or "No specific customizations detected." in suggestions:
         if any(word in transcription.lower() for word in ["car", "vehicle", "jeep", "automobile"]):
-            suggestions = "Consider upgrading your car's interior with luxury leather seats, or add custom alloy wheels for a sleek look."
+            suggestions = "Consider upgrading your car's interior with luxury leather seats, add custom alloy wheels, or install a premium sound system for an immersive experience."
         else:
             suggestions = "No relevant car customizations detected from your audio."
 
