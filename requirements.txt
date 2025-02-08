@@ -1,6 +1,5 @@
 streamlit
 numpy
-pyaudio
 sounddevice
 gTTS
 pydub
