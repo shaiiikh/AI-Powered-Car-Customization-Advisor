@@ -5,6 +5,7 @@ import tempfile
 import random
 import base64
 from gtts import gTTS
+from pydub import AudioSegment
 import wave
 from audio_processing import transcribe_audio
 from car_customization import get_customization_suggestions
@@ -23,6 +24,10 @@ st.markdown("""
             background-color: #f9f9f9;
             color: black;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        [data-theme="dark"] body {
+            background-color: #1e1e1e;
+            color: #f9f9f9;
         }
         .header {
             display: flex;
@@ -52,6 +57,10 @@ st.markdown("""
             color: black;
             margin-top: 20px;
         }
+        [data-theme="dark"] .custom-card {
+            background-color: #2b2b2b;
+            color: #f9f9f9;
+        }
         .custom-card h3 {
             color: #135387;
             font-size: 24px;
@@ -61,9 +70,26 @@ st.markdown("""
             line-height: 1.6;
             color: #333;
         }
+        [data-theme="dark"] .custom-card p {
+            color: #ccc;
+        }
         .audio-control {
             margin-top: 20px;
             width: 100%;
+        }
+        .social-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .social-buttons img {
+            width: 32px;
+            height: 32px;
+            transition: filter 0.3s ease;
+        }
+        [data-theme="dark"] .social-buttons img {
+            filter: invert(1);
         }
         button {
             background-color: #135387;
@@ -94,41 +120,44 @@ st.markdown("### 🎧 Record Your Own Voice")
 audio_bytes = audio_recorder()
 
 if audio_bytes:
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_audio_file:
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as temp_audio_file:
         temp_audio_file.write(audio_bytes)
-        audio_file_path = temp_audio_file.name
+        temp_audio_file_path = temp_audio_file.name
 
-    if os.path.exists(audio_file_path):
-        st.audio(audio_bytes, format="audio/wav")
+    audio = AudioSegment.from_file(temp_audio_file_path)
+    wav_audio_path = temp_audio_file_path.replace('.mp3', '.wav')
+    audio.export(wav_audio_path, format="wav")
 
-        transcription = transcribe_audio(audio_file_path).strip()
-        st.markdown("<div class='custom-card'><h3>📝 Transcription</h3><p>{}</p></div>".format(transcription), unsafe_allow_html=True)
+    st.audio(audio_bytes, format="audio/wav")
 
-        suggestions = get_customization_suggestions(transcription)
-        st.markdown("<div class='custom-card'><h3>🚗 Customization Suggestions</h3>", unsafe_allow_html=True)
+    transcription = transcribe_audio(wav_audio_path).strip()
+    st.markdown("<div class='custom-card'><h3>📝 Transcription</h3><p>{}</p></div>".format(transcription), unsafe_allow_html=True)
 
-        if suggestions and "No specific customizations detected." not in suggestions:
-            for suggestion in suggestions.split("\n"):
-                st.markdown(f"- {suggestion}")
-        else:
-            st.markdown("No relevant car customizations detected from your audio.")
+    suggestions = get_customization_suggestions(transcription)
+    st.markdown("<div class='custom-card'><h3>🚗 Customization Suggestions</h3>", unsafe_allow_html=True)
 
-        st.markdown("</div>", unsafe_allow_html=True)
-
-        tts = gTTS(text=suggestions, lang="en")
-        tts.save("suggestions_audio.mp3")
-
-        with open("suggestions_audio.mp3", "rb") as audio_file:
-            audio_bytes = audio_file.read()
-            audio_base64 = base64.b64encode(audio_bytes).decode()
-
-        st.markdown(f"""
-            <audio controls class="audio-control">
-                <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
-            </audio>
-        """, unsafe_allow_html=True)
+    if suggestions and "No specific customizations detected." not in suggestions:
+        for suggestion in suggestions.split("\n"):
+            st.markdown(f"- {suggestion}")
     else:
-        st.error("Audio recording failed. Please try again.")
+        st.markdown("No relevant car customizations detected from your audio.")
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    tts = gTTS(text=suggestions, lang="en")
+    tts.save("suggestions_audio.mp3")
+
+    with open("suggestions_audio.mp3", "rb") as audio_file:
+        audio_bytes = audio_file.read()
+        audio_base64 = base64.b64encode(audio_bytes).decode()
+
+    st.markdown(f"""
+        <audio controls class="audio-control">
+            <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
+        </audio>
+    """, unsafe_allow_html=True)
+else:
+    st.error("Audio recording failed. Please try again.")
 
 # --- UPLOAD AUDIO FILE FEATURE ---
 st.markdown("### 📂 Browse and Upload Your Audio File")
@@ -167,6 +196,18 @@ if audio_file:
             <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
         </audio>
     """, unsafe_allow_html=True)
+
+# --- SOCIAL LINKS ---
+st.markdown("""
+    <div class="social-buttons">
+        <a href="https://github.com/shaiiikh" target="_blank">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg" alt="GitHub">
+        </a>
+        <a href="https://www.linkedin.com/in/ali-shaiiikh" target="_blank">
+            <img src="https://content.linkedin.com/content/dam/me/business/en-us/amp/brand-site/v2/bg/LI-Bug.svg.original.svg" alt="LinkedIn">
+        </a>
+    </div>
+""", unsafe_allow_html=True)
 
 # --- FOOTER ---
 st.markdown("""
