@@ -4,3 +4,5 @@ gTTS
 pydub
 whisper
 audio_recorder_streamlit
+openai-whisper
+

@@ -1,6 +1,6 @@
 # audio_processing.py
 from pydub import AudioSegment
-import whisper
+import openai_whisper as whisper  # Try using the OpenAI Whisper if available
 import os
 import streamlit as st
 
