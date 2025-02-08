@@ -134,13 +134,16 @@ if audio_bytes:
     st.markdown("<div class='custom-card'><h3>📝 Transcription</h3><p>{}</p></div>".format(transcription), unsafe_allow_html=True)
 
     suggestions = get_customization_suggestions(transcription)
+    if not suggestions or "No specific customizations detected." in suggestions:
+        if any(word in transcription.lower() for word in ["car", "vehicle", "jeep", "automobile"]):
+            suggestions = "Consider upgrading your car's interior with luxury leather seats, or add custom alloy wheels for a sleek look."
+        else:
+            suggestions = "No relevant car customizations detected from your audio."
+
     st.markdown("<div class='custom-card'><h3>🚗 Customization Suggestions</h3>", unsafe_allow_html=True)
 
-    if suggestions and "No specific customizations detected." not in suggestions:
-        for suggestion in suggestions.split("\n"):
-            st.markdown(f"- {suggestion}")
-    else:
-        st.markdown("No relevant car customizations detected from your audio.")
+    for suggestion in suggestions.split("\n"):
+        st.markdown(f"- {suggestion}")
 
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -174,13 +177,16 @@ if audio_file:
     st.markdown("<div class='custom-card'><h3>📝 Transcription</h3><p>{}</p></div>".format(transcription), unsafe_allow_html=True)
 
     suggestions = get_customization_suggestions(transcription)
+    if not suggestions or "No specific customizations detected." in suggestions:
+        if any(word in transcription.lower() for word in ["car", "vehicle", "jeep", "automobile"]):
+            suggestions = "Consider upgrading your car's interior with luxury leather seats, or add custom alloy wheels for a sleek look."
+        else:
+            suggestions = "No relevant car customizations detected from your audio."
+
     st.markdown("<div class='custom-card'><h3>🚗 Customization Suggestions</h3>", unsafe_allow_html=True)
 
-    if suggestions and "No specific customizations detected." not in suggestions:
-        for suggestion in suggestions.split("\n"):
-            st.markdown(f"- {suggestion}")
-    else:
-        st.markdown("No relevant car customizations detected from your audio.")
+    for suggestion in suggestions.split("\n"):
+        st.markdown(f"- {suggestion}")
 
     st.markdown("</div>", unsafe_allow_html=True)
 
