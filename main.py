@@ -147,16 +147,20 @@ st.markdown("### 🎙️ Record Your Own Voice")
 audio_bytes = audio_recorder()
 
 if audio_bytes:
-    # Save the recorded audio
     with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_audio_file:
         temp_audio_file.write(audio_bytes)
         audio_file_path = temp_audio_file.name
 
-    # Display the recorded audio
-    st.audio(audio_bytes, format="audio/wav")
-
-    # --- TRANSCRIPTION ---
-    transcription = transcribe_audio(audio_file_path)
+    # Ensure the file is saved before transcription
+    if os.path.exists(audio_file_path):
+        st.audio(audio_bytes, format="audio/wav")
+        
+        # Transcribe and display the audio
+        transcription = transcribe_audio(audio_file_path)
+        st.markdown("<div class='custom-card'><h3>📝 Transcription</h3></div>", unsafe_allow_html=True)
+        st.markdown(f"<div id='transcription'>{transcription}</div>", unsafe_allow_html=True)
+    else:
+        st.error("Audio recording failed. Please try again.")
     st.markdown("<div class='custom-card'><h3>📝 Transcription</h3></div>", unsafe_allow_html=True)
     st.markdown(f"<div id='transcription'>{transcription}</div>", unsafe_allow_html=True)
 

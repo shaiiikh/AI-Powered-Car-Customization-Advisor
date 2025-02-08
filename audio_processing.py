@@ -1,16 +1,29 @@
 # audio_processing.py
 from pydub import AudioSegment
 import whisper
+import os
+import streamlit as st
 
-# Load the Whisper model
-model = whisper.load_model("base")
+# Load the Whisper model only once using Streamlit's cache
+@st.cache_resource
+def load_model():
+    return whisper.load_model("base")
+
+model = load_model()
 
 # Function to transcribe audio
 def transcribe_audio(audio_path):
-    # Convert the audio to WAV format if necessary
-    audio = AudioSegment.from_file(audio_path)
-    audio.export("temp.wav", format="wav")
-    
-    # Use Whisper for transcription
-    result = model.transcribe("temp.wav")
-    return result["text"]
+    try:
+        # Convert the audio to WAV format if necessary
+        audio = AudioSegment.from_file(audio_path)
+        temp_wav_path = "temp.wav"
+        audio.export(temp_wav_path, format="wav")
+
+        # Ensure the file exists before transcription
+        if os.path.exists(temp_wav_path):
+            result = model.transcribe(temp_wav_path)
+            return result["text"]
+        else:
+            return "Error: Audio file conversion failed."
+    except Exception as e:
+        return f"Transcription error: {e}"
