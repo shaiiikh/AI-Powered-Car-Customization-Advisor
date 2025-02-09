@@ -1,13 +1,13 @@
 openai-whisper
 language-tool-python
-whisper
 openai
 pydub
 gTTS
 python-dotenv==0.20.0
 ffmpeg-python==0.2.0
-streamlit
 torch==2.0.0
+whisper==1.1.0
+streamlit==1.23.1
 requests
 Pillow
 audio-recorder-streamlit
