@@ -13,6 +13,13 @@ import requests
 import os
 import time
 from audio_recorder_streamlit import audio_recorder
+from pydub import AudioSegment
+from pydub.utils import which
+
+# Explicitly set ffmpeg and ffprobe paths for Streamlit Cloud
+AudioSegment.converter = which("ffmpeg")
+AudioSegment.ffprobe = which("ffprobe")
+
 
 # --- PAGE CONFIGURATION ---
 
