@@ -5,4 +5,9 @@ pydub
 whisper
 audio_recorder_streamlit
 openai-whisper
+numba==0.61.0
+llvmlite==0.44.0
+ffmpeg-python
+torch==2.6.0
+
 
