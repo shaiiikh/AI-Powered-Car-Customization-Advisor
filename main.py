@@ -3,14 +3,19 @@ import tempfile
 import os
 from dotenv import load_dotenv
 from pydub import AudioSegment
-import openai
+from openai import OpenAI
 from PIL import Image
 import requests
 from gtts import gTTS
 from audio_recorder_streamlit import audio_recorder
 
 load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+# Check if API key is correctly set
+if not os.getenv("OPENAI_API_KEY"):
+    st.error("API Key is not set. Please check your .env file and ensure the OPENAI_API_KEY is correctly configured.")
 
 # Streamlit app layout
 st.set_page_config(page_title="AI Car Customization Advisor", page_icon="🚗", layout="wide")
@@ -111,13 +116,13 @@ def transcribe_audio(audio_file):
 
     try:
         with open(tmp_file_path, "rb") as audio_file:
-            transcription_result = openai.audio.transcriptions.create(
+            transcription_result = client.audio.transcriptions.create(
                 model="whisper-1",
                 file=audio_file
             )
 
         os.remove(tmp_file_path)
-        return transcription_result.text  # Access the transcribed text correctly
+        return transcription_result.text
 
     except Exception as e:
         st.error(f"Transcription failed: {e}")
@@ -125,23 +130,25 @@ def transcribe_audio(audio_file):
 
 # Function to generate car customization suggestions using OpenAI GPT
 def generate_customization_suggestions(transcription):
-    prompt = f"Based on the following car customization request, suggest detailed modifications including paint, rims, body kits, and interior changes:\n\n{transcription}\n\nSuggestions:" 
-    response = openai.Completion.create(
-        model="text-davinci-003",
-        prompt=prompt,
-        max_tokens=150
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant providing car customization suggestions."},
+            {"role": "user", "content": transcription}
+        ]
     )
-    return response.choices[0].text.strip()
+    return response.choices[0].message.content
 
 # Function to generate car image using DALL-E
 def generate_car_image(prompt):
-    response = openai.Image.create(
+    response = client.images.generate(
         model="dall-e-3",
         prompt=prompt,
+        size="1024x1024",
         quality="standard",
         n=1,
     )
-    image_url = response['data'][0]['url']
+    image_url = response.data[0].url
     image_response = requests.get(image_url)
     with open("car_customization.jpg", "wb") as f:
         f.write(image_response.content)
@@ -170,7 +177,7 @@ if audio_bytes:
         st.markdown("</div>", unsafe_allow_html=True)
 
         image_prompt = f"A car customized with the following features: {transcription}"
-        st.markdown("<div class='custom-card'><h3>🖼 Customized Car Visualization</h3>", unsafe_allow_html=True)
+        st.markdown("<div class='custom-card'><h3>🔼 Customized Car Visualization</h3>", unsafe_allow_html=True)
         with st.spinner('Generating car image...'):
             car_image_path = generate_car_image(image_prompt)
         car_image = Image.open(car_image_path)
@@ -206,7 +213,7 @@ if audio_file:
         st.markdown("</div>", unsafe_allow_html=True)
 
         image_prompt = f"A car customized with the following features: {transcription}"
-        st.markdown("<div class='custom-card'><h3>🖼 Customized Car Visualization</h3>", unsafe_allow_html=True)
+        st.markdown("<div class='custom-card'><h3>🔼 Customized Car Visualization</h3>", unsafe_allow_html=True)
         with st.spinner('Generating car image...'):
             car_image_path = generate_car_image(image_prompt)
         car_image = Image.open(car_image_path)
