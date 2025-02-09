@@ -7,6 +7,21 @@ import base64
 from gtts import gTTS
 from pydub import AudioSegment
 import wave
+import os
+os.environ["STREAMLIT_WATCH_USE_POLLING"] = "true"
+
+from pydub import AudioSegment
+from pydub.utils import which
+
+# Manually set ffmpeg and ffprobe paths for Streamlit Cloud
+ffmpeg_path = "/usr/bin/ffmpeg"
+ffprobe_path = "/usr/bin/ffprobe"
+
+if os.path.exists(ffmpeg_path) and os.path.exists(ffprobe_path):
+    AudioSegment.converter = ffmpeg_path
+    AudioSegment.ffprobe = ffprobe_path
+else:
+    print("⚠️ Warning: FFmpeg or FFprobe not found in deployment environment.")
 from audio_processing import transcribe_audio
 from car_customization import get_customization_suggestions
 import requests
