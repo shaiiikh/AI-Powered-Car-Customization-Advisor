@@ -1,4 +1,5 @@
 import streamlit as st
+st.set_page_config(page_title="AI Car Customization", page_icon="🚗", layout="wide")
 import numpy as np
 import tempfile
 import random
@@ -14,7 +15,7 @@ import time
 from audio_recorder_streamlit import audio_recorder
 
 # --- PAGE CONFIGURATION ---
-st.set_page_config(page_title="AI Car Customization", page_icon="🚗", layout="wide")
+
 
 # --- EMBEDDED CSS STYLING ---
 st.markdown("""
