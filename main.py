@@ -14,7 +14,7 @@ load_dotenv()
 client = OpenAI()
 
 # Streamlit Page Configuration
-st.set_page_config(page_title="AI Car Customization", page_icon="🚗", layout="wide")
+st.set_page_config(page_title="AI Car Customization Advisor", page_icon="🚗", layout="wide")
 os.environ["STREAMLIT_WATCH_USE_POLLING"] = "true"
 
 # --- EMBEDDED CSS STYLING ---
@@ -90,6 +90,10 @@ st.markdown("""
         button:hover {
             background-color: #0f4369;
         }
+        audio {
+            width: 100%;
+            border-radius: 10px;
+        }
     </style>
 """, unsafe_allow_html=True)
 
@@ -147,7 +151,7 @@ def generate_car_image(prompt):
 # --- RECORD AUDIO FEATURE ---
 st.markdown("### 🎧 Record Your Own Voice")
 
-audio_bytes = audio_recorder(pause_threshold=10.0, text="Click to Record")
+audio_bytes = audio_recorder(pause_threshold=60.0, text="Click to Record")
 
 if audio_bytes:
     with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as temp_audio_file:
@@ -159,24 +163,25 @@ if audio_bytes:
     transcription = transcribe_audio(temp_audio_file_path).strip()
     st.markdown(f"<div class='custom-card'><h3>📝 Transcription</h3><p>{transcription}</p></div>", unsafe_allow_html=True)
 
-    suggestions = get_customization_suggestions(transcription)
-    st.markdown("<div class='custom-card'><h3>🚗 Customization Suggestions</h3>", unsafe_allow_html=True)
-    for suggestion in suggestions.split("\n"):
-        st.markdown(f"- {suggestion}")
-    st.markdown("</div>", unsafe_allow_html=True)
+    if st.button("Generate Suggestions and Image"):
+        suggestions = get_customization_suggestions(transcription)
+        st.markdown("<div class='custom-card'><h3>🚗 Customization Suggestions</h3>", unsafe_allow_html=True)
+        for suggestion in suggestions.split("\n"):
+            st.markdown(f"- {suggestion}")
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    image_prompt = f"A car customized with the following features: {transcription}"
-    st.markdown("<div class='custom-card'><h3>🖼 Customized Car Visualization</h3>", unsafe_allow_html=True)
-    with st.spinner('Generating car image...'):
-        car_image_path = generate_car_image(image_prompt)
-    car_image = Image.open(car_image_path)
-    st.image(car_image, caption="Your Customized Car", use_container_width=True)
+        image_prompt = f"A car customized with the following features: {transcription}"
+        st.markdown("<div class='custom-card'><h3>🖼 Customized Car Visualization</h3>", unsafe_allow_html=True)
+        with st.spinner('Generating car image...'):
+            car_image_path = generate_car_image(image_prompt)
+        car_image = Image.open(car_image_path)
+        st.image(car_image, caption="Your Customized Car", use_container_width=True)
 
-    tts = gTTS(text=suggestions, lang="en")
-    tts.save("suggestions_audio.mp3")
+        tts = gTTS(text=suggestions, lang="en")
+        tts.save("suggestions_audio.mp3")
 
-    with open("suggestions_audio.mp3", "rb") as audio_file:
-        st.audio(audio_file.read(), format="audio/mp3")
+        with open("suggestions_audio.mp3", "rb") as audio_file:
+            st.audio(audio_file.read(), format="audio/mp3")
 else:
     st.warning("Click the record button to start recording your voice.")
 
@@ -194,28 +199,29 @@ if audio_file:
     transcription = transcribe_audio(audio_file_path).strip()
     st.markdown(f"<div class='custom-card'><h3>📝 Transcription</h3><p>{transcription}</p></div>", unsafe_allow_html=True)
 
-    suggestions = get_customization_suggestions(transcription)
-    st.markdown("<div class='custom-card'><h3>🚗 Customization Suggestions</h3>", unsafe_allow_html=True)
-    for suggestion in suggestions.split("\n"):
-        st.markdown(f"- {suggestion}")
-    st.markdown("</div>", unsafe_allow_html=True)
+    if st.button("Generate Suggestions and Image", key='upload_btn'):
+        suggestions = get_customization_suggestions(transcription)
+        st.markdown("<div class='custom-card'><h3>🚗 Customization Suggestions</h3>", unsafe_allow_html=True)
+        for suggestion in suggestions.split("\n"):
+            st.markdown(f"- {suggestion}")
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    image_prompt = f"A car customized with the following features: {transcription}"
-    st.markdown("<div class='custom-card'><h3>🖼 Customized Car Visualization</h3>", unsafe_allow_html=True)
-    with st.spinner('Generating car image...'):
-        car_image_path = generate_car_image(image_prompt)
-    car_image = Image.open(car_image_path)
-    st.image(car_image, caption="Your Customized Car", use_container_width=True)
+        image_prompt = f"A car customized with the following features: {transcription}"
+        st.markdown("<div class='custom-card'><h3>🖼 Customized Car Visualization</h3>", unsafe_allow_html=True)
+        with st.spinner('Generating car image...'):
+            car_image_path = generate_car_image(image_prompt)
+        car_image = Image.open(car_image_path)
+        st.image(car_image, caption="Your Customized Car", use_container_width=True)
 
-    tts = gTTS(text=suggestions, lang="en")
-    tts.save("suggestions_audio.mp3")
+        tts = gTTS(text=suggestions, lang="en")
+        tts.save("suggestions_audio.mp3")
 
-    with open("suggestions_audio.mp3", "rb") as audio_file:
-        st.audio(audio_file.read(), format="audio/mp3")
+        with open("suggestions_audio.mp3", "rb") as audio_file:
+            st.audio(audio_file.read(), format="audio/mp3")
 
 # --- FOOTER ---
 st.markdown("""
     <div class='footer'>
-        Developed by Junaid Hossain Mridul 👨‍💻
+        Developed by shaiiikh 👨‍💻
     </div>
 """, unsafe_allow_html=True)
