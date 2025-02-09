@@ -1,21 +1,19 @@
 import streamlit as st
-import whisper
 import tempfile
 import os
 from dotenv import load_dotenv
 from pydub import AudioSegment
+import openai
 from PIL import Image
 import requests
-import openai  # Corrected import
 from gtts import gTTS
 from audio_recorder_streamlit import audio_recorder
 
 load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")  # Corrected API key setup
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
-# Streamlit Page Configuration
+# Streamlit app layout
 st.set_page_config(page_title="AI Car Customization Advisor", page_icon="🚗", layout="wide")
-
 
 # --- EMBEDDED CSS STYLING ---
 st.markdown("""
@@ -104,42 +102,34 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# Load Whisper model
-@st.cache_resource
-def load_whisper_model():
-    return whisper.load_model("base", device="cpu")
-
-
-model = load_whisper_model()
-
-# Transcribe audio function
-def transcribe_audio(audio_file_path):
-    audio = AudioSegment.from_file(audio_file_path)
+# Function to transcribe speech to text using OpenAI Whisper API
+def transcribe_audio(audio_file):
+    audio = AudioSegment.from_file(audio_file)
     with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_file:
         audio.export(tmp_file, format="wav")
         tmp_file_path = tmp_file.name
-    audio_array = whisper.load_audio(tmp_file_path)
-    result = model.transcribe(audio_array)
+    
+    with open(tmp_file_path, "rb") as audio_file:
+        transcription_result = openai.Audio.transcribe("whisper-1", audio_file)
+    
     os.remove(tmp_file_path)
-    return result['text']
+    return transcription_result['text']
 
-# Get customization suggestions using OpenAI GPT
-def get_customization_suggestions(transcription):
-    completion = openai.ChatCompletion.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant providing car customization suggestions."},
-            {"role": "user", "content": f"Suggest car modifications for the following request: {transcription}"}
-        ]
+# Function to generate car customization suggestions using OpenAI GPT
+def generate_customization_suggestions(transcription):
+    prompt = f"Based on the following car customization request, suggest detailed modifications including paint, rims, body kits, and interior changes:\n\n{transcription}\n\nSuggestions:" 
+    response = openai.Completion.create(
+        model="text-davinci-003",
+        prompt=prompt,
+        max_tokens=150
     )
-    return completion.choices[0].message.content
+    return response.choices[0].text.strip()
 
-# Generate car image using DALL-E
+# Function to generate car image using DALL-E
 def generate_car_image(prompt):
     response = openai.Image.create(
         model="dall-e-3",
         prompt=prompt,
-        size="1024x1024",
         quality="standard",
         n=1,
     )
@@ -165,7 +155,7 @@ if audio_bytes:
     st.markdown(f"<div class='custom-card'><h3>📝 Transcription</h3><p>{transcription}</p></div>", unsafe_allow_html=True)
 
     if st.button("Generate Suggestions and Image"):
-        suggestions = get_customization_suggestions(transcription)
+        suggestions = generate_customization_suggestions(transcription)
         st.markdown("<div class='custom-card'><h3>🚗 Customization Suggestions</h3>", unsafe_allow_html=True)
         for suggestion in suggestions.split("\n"):
             st.markdown(f"- {suggestion}")
@@ -201,7 +191,7 @@ if audio_file:
     st.markdown(f"<div class='custom-card'><h3>📝 Transcription</h3><p>{transcription}</p></div>", unsafe_allow_html=True)
 
     if st.button("Generate Suggestions and Image", key='upload_btn'):
-        suggestions = get_customization_suggestions(transcription)
+        suggestions = generate_customization_suggestions(transcription)
         st.markdown("<div class='custom-card'><h3>🚗 Customization Suggestions</h3>", unsafe_allow_html=True)
         for suggestion in suggestions.split("\n"):
             st.markdown(f"- {suggestion}")

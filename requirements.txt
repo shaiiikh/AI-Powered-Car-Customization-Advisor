@@ -3,11 +3,10 @@ language-tool-python
 openai
 pydub
 gTTS
-python-dotenv==0.20.0
-ffmpeg-python==0.2.0
-torch==2.0.0
-whisper==1.1.0
-streamlit==1.23.1
+python-dotenv
+ffmpeg-python
+torch  # Removed version pin
+streamlit  # Removed version pin
 requests
 Pillow
 audio-recorder-streamlit
