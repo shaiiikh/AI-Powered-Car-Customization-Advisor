@@ -6,16 +6,16 @@ from dotenv import load_dotenv
 from pydub import AudioSegment
 from PIL import Image
 import requests
-from openai import OpenAI
+import openai  # Corrected import
 from gtts import gTTS
 from audio_recorder_streamlit import audio_recorder
 
 load_dotenv()
-client = OpenAI()
+openai.api_key = os.getenv("OPENAI_API_KEY")  # Corrected API key setup
 
 # Streamlit Page Configuration
 st.set_page_config(page_title="AI Car Customization Advisor", page_icon="🚗", layout="wide")
-os.environ["STREAMLIT_WATCH_USE_POLLING"] = "true"
+
 
 # --- EMBEDDED CSS STYLING ---
 st.markdown("""
@@ -107,7 +107,8 @@ st.markdown("""
 # Load Whisper model
 @st.cache_resource
 def load_whisper_model():
-    return whisper.load_model("base")
+    return whisper.load_model("base", device="cpu")
+
 
 model = load_whisper_model()
 
@@ -124,7 +125,7 @@ def transcribe_audio(audio_file_path):
 
 # Get customization suggestions using OpenAI GPT
 def get_customization_suggestions(transcription):
-    completion = client.chat.completions.create(
+    completion = openai.ChatCompletion.create(
         model="gpt-4o",
         messages=[
             {"role": "system", "content": "You are a helpful assistant providing car customization suggestions."},
@@ -135,14 +136,14 @@ def get_customization_suggestions(transcription):
 
 # Generate car image using DALL-E
 def generate_car_image(prompt):
-    response = client.images.generate(
+    response = openai.Image.create(
         model="dall-e-3",
         prompt=prompt,
         size="1024x1024",
         quality="standard",
         n=1,
     )
-    image_url = response.data[0].url
+    image_url = response['data'][0]['url']
     image_response = requests.get(image_url)
     with open("car_customization.jpg", "wb") as f:
         f.write(image_response.content)
