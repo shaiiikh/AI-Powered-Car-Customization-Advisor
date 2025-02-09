@@ -1,43 +1,18 @@
 import streamlit as st
-st.set_page_config(page_title="AI Car Customization", page_icon="🚗", layout="wide")
 import numpy as np
 import tempfile
 import random
 import base64
 from gtts import gTTS
 from pydub import AudioSegment
-import wave
 import os
-os.environ["STREAMLIT_WATCH_USE_POLLING"] = "true"
-
-from pydub import AudioSegment
-from pydub.utils import which
-
-# Manually set ffmpeg and ffprobe paths for Streamlit Cloud
-ffmpeg_path = "/usr/bin/ffmpeg"
-ffprobe_path = "/usr/bin/ffprobe"
-
-if os.path.exists(ffmpeg_path) and os.path.exists(ffprobe_path):
-    AudioSegment.converter = ffmpeg_path
-    AudioSegment.ffprobe = ffprobe_path
-else:
-    print("⚠️ Warning: FFmpeg or FFprobe not found in deployment environment.")
 from audio_processing import transcribe_audio
 from car_customization import get_customization_suggestions
-import requests
-import os
-import time
 from audio_recorder_streamlit import audio_recorder
-from pydub import AudioSegment
-from pydub.utils import which
 
-# Explicitly set ffmpeg and ffprobe paths for Streamlit Cloud
-AudioSegment.converter = which("ffmpeg")
-AudioSegment.ffprobe = which("ffprobe")
-
-
-# --- PAGE CONFIGURATION ---
-
+# Streamlit Page Configuration
+st.set_page_config(page_title="AI Car Customization", page_icon="🚗", layout="wide")
+os.environ["STREAMLIT_WATCH_USE_POLLING"] = "true"
 
 # --- EMBEDDED CSS STYLING ---
 st.markdown("""
@@ -146,14 +121,11 @@ if audio_bytes:
         temp_audio_file.write(audio_bytes)
         temp_audio_file_path = temp_audio_file.name
 
-    audio = AudioSegment.from_file(temp_audio_file_path)
-    wav_audio_path = temp_audio_file_path.replace('.mp3', '.wav')
-    audio.export(wav_audio_path, format="wav")
+    # Play recorded audio using st.audio
+    st.audio(audio_bytes, format="audio/mp3")
 
-    st.audio(audio_bytes, format="audio/wav")
-
-    transcription = transcribe_audio(wav_audio_path).strip()
-    st.markdown("<div class='custom-card'><h3>📝 Transcription</h3><p>{}</p></div>".format(transcription), unsafe_allow_html=True)
+    transcription = transcribe_audio(temp_audio_file_path).strip()
+    st.markdown(f"<div class='custom-card'><h3>📝 Transcription</h3><p>{transcription}</p></div>", unsafe_allow_html=True)
 
     suggestions = get_customization_suggestions(transcription)
     if not suggestions or "No specific customizations detected." in suggestions:
@@ -163,24 +135,17 @@ if audio_bytes:
             suggestions = "No relevant car customizations detected from your audio."
 
     st.markdown("<div class='custom-card'><h3>🚗 Customization Suggestions</h3>", unsafe_allow_html=True)
-
     for suggestion in suggestions.split("\n"):
         st.markdown(f"- {suggestion}")
-
     st.markdown("</div>", unsafe_allow_html=True)
 
+    # Convert suggestions to speech
     tts = gTTS(text=suggestions, lang="en")
     tts.save("suggestions_audio.mp3")
 
+    # Play generated audio using st.audio
     with open("suggestions_audio.mp3", "rb") as audio_file:
-        audio_bytes = audio_file.read()
-        audio_base64 = base64.b64encode(audio_bytes).decode()
-
-    st.markdown(f"""
-        <audio controls class="audio-control">
-            <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
-        </audio>
-    """, unsafe_allow_html=True)
+        st.audio(audio_file.read(), format="audio/mp3")
 else:
     st.warning("Click the record button to start recording your voice.")
 
@@ -193,10 +158,11 @@ if audio_file:
         temp_file.write(audio_file.read())
         audio_file_path = temp_file.name
 
-    st.audio(audio_file_path, format="audio/wav")
+    # Play uploaded audio using st.audio
+    st.audio(audio_file, format="audio/wav")
 
     transcription = transcribe_audio(audio_file_path).strip()
-    st.markdown("<div class='custom-card'><h3>📝 Transcription</h3><p>{}</p></div>".format(transcription), unsafe_allow_html=True)
+    st.markdown(f"<div class='custom-card'><h3>📝 Transcription</h3><p>{transcription}</p></div>", unsafe_allow_html=True)
 
     suggestions = get_customization_suggestions(transcription)
     if not suggestions or "No specific customizations detected." in suggestions:
@@ -206,24 +172,17 @@ if audio_file:
             suggestions = "No relevant car customizations detected from your audio."
 
     st.markdown("<div class='custom-card'><h3>🚗 Customization Suggestions</h3>", unsafe_allow_html=True)
-
     for suggestion in suggestions.split("\n"):
         st.markdown(f"- {suggestion}")
-
     st.markdown("</div>", unsafe_allow_html=True)
 
+    # Convert suggestions to speech
     tts = gTTS(text=suggestions, lang="en")
     tts.save("suggestions_audio.mp3")
 
+    # Play generated audio using st.audio
     with open("suggestions_audio.mp3", "rb") as audio_file:
-        audio_bytes = audio_file.read()
-        audio_base64 = base64.b64encode(audio_bytes).decode()
-
-    st.markdown(f"""
-        <audio controls class="audio-control">
-            <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
-        </audio>
-    """, unsafe_allow_html=True)
+        st.audio(audio_file.read(), format="audio/mp3")
 
 # --- SOCIAL LINKS ---
 st.markdown("""
