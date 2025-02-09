@@ -3,26 +3,22 @@ import whisper
 import os
 import streamlit as st
 
-# Manually set ffmpeg path for deployment environments
-AudioSegment.ffmpeg = "/usr/bin/ffmpeg"
-AudioSegment.ffprobe = "/usr/bin/ffprobe"
-
+# Load the Whisper model (use a smaller one like 'small' for deployment)
 @st.cache_resource
 def load_model():
-    return whisper.load_model("base")
+    try:
+        model = whisper.load_model("small")  # Using a smaller model for faster loading
+        return model
+    except Exception as e:
+        st.error(f"Error loading Whisper model: {e}")
+        return None
 
 model = load_model()
 
 def transcribe_audio(audio_path):
     try:
-        audio = AudioSegment.from_file(audio_path)
-        temp_wav_path = "temp.wav"
-        audio.export(temp_wav_path, format="wav")
-
-        if os.path.exists(temp_wav_path):
-            result = model.transcribe(temp_wav_path)
-            return result["text"]
-        else:
-            return "Error: Audio file conversion failed."
+        # Directly use Whisper's ability to process .mp3 and .wav files
+        result = model.transcribe(audio_path)
+        return result["text"]
     except Exception as e:
         return f"Transcription error: {e}"
