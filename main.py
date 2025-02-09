@@ -111,18 +111,17 @@ def transcribe_audio(audio_file):
 
     try:
         with open(tmp_file_path, "rb") as audio_file:
-            transcription_result = openai.Audio.transcriptions.create(
+            transcription_result = openai.audio.transcriptions.create(
                 model="whisper-1",
                 file=audio_file
             )
-        
+
         os.remove(tmp_file_path)
-        return transcription_result['text']
-    
+        return transcription_result.text  # Access the transcribed text correctly
+
     except Exception as e:
         st.error(f"Transcription failed: {e}")
         return "Error in transcription"
-
 
 # Function to generate car customization suggestions using OpenAI GPT
 def generate_customization_suggestions(transcription):

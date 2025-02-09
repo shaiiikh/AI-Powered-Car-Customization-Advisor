@@ -1,6 +1,6 @@
 openai-whisper
 language-tool-python
-openai
+openai>=1.0.0
 pydub
 gTTS
 python-dotenv
