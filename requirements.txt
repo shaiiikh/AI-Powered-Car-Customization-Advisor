@@ -10,3 +10,4 @@ streamlit
 torch
 requests
 Pillow
+audio-recorder-streamlit
