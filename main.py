@@ -108,12 +108,21 @@ def transcribe_audio(audio_file):
     with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp_file:
         audio.export(tmp_file, format="wav")
         tmp_file_path = tmp_file.name
+
+    try:
+        with open(tmp_file_path, "rb") as audio_file:
+            transcription_result = openai.Audio.transcriptions.create(
+                model="whisper-1",
+                file=audio_file
+            )
+        
+        os.remove(tmp_file_path)
+        return transcription_result['text']
     
-    with open(tmp_file_path, "rb") as audio_file:
-        transcription_result = openai.Audio.transcribe("whisper-1", audio_file)
-    
-    os.remove(tmp_file_path)
-    return transcription_result['text']
+    except Exception as e:
+        st.error(f"Transcription failed: {e}")
+        return "Error in transcription"
+
 
 # Function to generate car customization suggestions using OpenAI GPT
 def generate_customization_suggestions(transcription):
